@@ -82,6 +82,14 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\..\TSEA27-include\UART\uart.c">
+      <SubType>compile</SubType>
+      <Link>uart.c</Link>
+    </Compile>
+    <Compile Include="..\..\TSEA27-include\UART\uart.h">
+      <SubType>compile</SubType>
+      <Link>uart.h</Link>
+    </Compile>
     <Compile Include="include\SPI\spi.c">
       <SubType>compile</SubType>
       <Link>spi.c</Link>
