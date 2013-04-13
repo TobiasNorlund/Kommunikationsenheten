@@ -2,7 +2,11 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
-Kommunikationsenheten.c
+..\..\TSEA27-include\circularbuffer.c
 
-spi.c
+..\..\TSEA27-include\message.c
+
+..\..\TSEA27-include\UART\uart.c
+
+Kommunikationsenheten.c
 

@@ -5,25 +5,42 @@
  *  Author: tobno568
  */ 
 
-
+#include <stdint.h>
 #include <avr/io.h>
-
-#define CONFIG_SPI_SLAVE
-
-#include "include/commands.h"
-#include "include/SPI/spi.h"
+#include "../../TSEA27-include/UART/uart.h"
+#include "../../TSEA27-include/message.h"
 
 
 int main(void)
 {
-	SPI_SLAVE_init();
+	// TODO: Initiera SPI
 	
-	uint8_t* len = 0;
-	uint8_t msgR[16];
-    if(1)
-    {
-		SPI_SLAVE_read(msgR, len);
-        SPI_SLAVE_write(msgR, *len);
-
-    }
+	// Initiera UART
+	UART_init();
+	
+	
+	while(1){
+		
+		// 1. Finns det data från PC:n? (UART)
+		if(UART_hasMessage()){
+			
+			// Läs in meddelandet
+			uint8_t msg;
+			UART_readMessage(&msg);
+			
+			// Kolla om det är en begäran om nödstop
+			if(getMessageType(&msg) == TYPE_EMERGENCY_STOP){
+				// TODO: Nödstoppa!
+			}else{
+				
+				// Lägg msg i SPI-TX-kö...
+			}
+		}
+		
+		// 2. Finns det data från styrenheten? (SPI)
+		
+		// TODO
+		
+	}
+	return 0;
 }
