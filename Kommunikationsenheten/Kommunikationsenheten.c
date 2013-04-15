@@ -7,40 +7,78 @@
 
 #include <stdint.h>
 #include <avr/io.h>
+#include "../../TSEA27-include/SPI/spi_slave.h"
 #include "../../TSEA27-include/UART/uart.h"
 #include "../../TSEA27-include/message.h"
+#include "../../TSEA27-include/circularbuffer.h"
+
 
 
 int main(void)
 {
-	// TODO: Initiera SPI
-	
-	// Initiera UART
+	SPI_SLAVE_init();
 	UART_init();
+	sei();
+	CircularBuffer messageQueue; // Buffer för mottagna meddelanden via uart
+	cbInit(&messageQueue, 32);
+	uint8_t spiMsg[32];
+	uint8_t spiType;
+	uint8_t spiLen;
 	
+	uint8_t spiMsgR[32];
+	uint8_t spiTypeR;
+	uint8_t spiLenR;
+	
+	uint8_t uartMsg[16];
+	uint8_t uartType;
+	uint8_t uartLen;
 	
 	while(1){
-		
-		// 1. Finns det data från PC:n? (UART)
-		if(UART_hasMessage()){
-			
-			// Läs in meddelandet
-			uint8_t msg;
-			UART_readMessage(&msg);
-			
-			// Kolla om det är en begäran om nödstop
-			if(getMessageType(&msg) == TYPE_EMERGENCY_STOP){
+		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
+			if(uartType == TYPE_EMERGENCY_STOP){
 				// TODO: Nödstoppa!
 			}else{
-				
-				// Lägg msg i SPI-TX-kö...
+				cbWrite(&messageQueue, (uartType<<5)|uartLen);
+				for(uint8_t i=0; i < uartLen; i++)
+				{
+					cbWrite(&messageQueue, uartMsg[i]);
+				}
 			}
 		}
 		
-		// 2. Finns det data från styrenheten? (SPI)
-		
-		// TODO
-		
+		if(SPI_SLAVE_read(spiMsg, &spiType, &spiLen))
+		{
+			switch (spiType)
+			{
+				case TYPE_REQUEST_PC_MESSAGE:
+				{
+					uint8_t head = cbPeek(&messageQueue);
+					uint8_t len = head&0b00011111;
+					uint8_t type = 0b11100000&head;
+					type = type>>5;
+					if(len <= cbBytesUsed(&messageQueue))
+					{
+						head = cbRead(&messageQueue);//read head again, to sync
+						for(uint8_t i=0; i < uartLen; i++)
+						{
+							spiMsgR[i]=cbRead(&messageQueue);
+						}
+						SPI_SLAVE_write(spiMsgR, type, len);	
+					}
+					else
+					{
+						SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
+					}
+					break;
+				}					
+				case 2://send to pc TODO
+				{
+
+					break;
+				}
+
+			}
+		}		
 	}
 	return 0;
 }

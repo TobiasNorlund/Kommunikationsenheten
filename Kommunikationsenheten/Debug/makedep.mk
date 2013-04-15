@@ -6,6 +6,8 @@
 
 ..\..\TSEA27-include\message.c
 
+..\..\TSEA27-include\SPI\spi_slave.c
+
 ..\..\TSEA27-include\UART\uart.c
 
 Kommunikationsenheten.c
