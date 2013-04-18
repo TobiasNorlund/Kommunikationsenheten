@@ -7,11 +7,11 @@
 
 #include <stdint.h>
 #include <avr/io.h>
+#include "../../TSEA27-include/utils.h"
 #include "../../TSEA27-include/SPI/spi_slave.h"
 #include "../../TSEA27-include/UART/uart.h"
 #include "../../TSEA27-include/message.h"
 #include "../../TSEA27-include/circularbuffer.h"
-
 
 
 int main(void)
@@ -33,10 +33,13 @@ int main(void)
 	uint8_t uartType;
 	uint8_t uartLen;
 	
+	SETBIT(DDRB, DDB3);
+	CLEARBIT(PORTB, PORTB3);
+		
 	while(1){
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
 			if(uartType == TYPE_EMERGENCY_STOP){
-				// TODO: Nödstoppa!
+				SETBIT(PORTB, PORTB3);
 			}else{
 				cbWrite(&messageQueue, (uartType<<5)|uartLen);
 				for(uint8_t i=0; i < uartLen; i++)
@@ -47,36 +50,28 @@ int main(void)
 		}
 		
 		if(SPI_SLAVE_read(spiMsg, &spiType, &spiLen))
-		{
-			switch (spiType)
+		{						
+			if(spiType == TYPE_REQUEST_PC_MESSAGE)
 			{
-				case TYPE_REQUEST_PC_MESSAGE:
+				uint8_t head = cbPeek(&messageQueue);
+				uint8_t len = head&0b00011111;
+				uint8_t type = 0b11100000&head;
+				type = type>>5;
+				if(len <= cbBytesUsed(&messageQueue))
 				{
-					uint8_t head = cbPeek(&messageQueue);
-					uint8_t len = head&0b00011111;
-					uint8_t type = 0b11100000&head;
-					type = type>>5;
-					if(len <= cbBytesUsed(&messageQueue))
+					head = cbRead(&messageQueue); //read head again, to sync
+					for(uint8_t i = 0; i < len; i++)
 					{
-						head = cbRead(&messageQueue);//read head again, to sync
-						for(uint8_t i=0; i < uartLen; i++)
-						{
-							spiMsgR[i]=cbRead(&messageQueue);
-						}
-						SPI_SLAVE_write(spiMsgR, type, len);	
+						spiMsgR[i]=cbRead(&messageQueue);
 					}
-					else
-					{
-						SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
-					}
-					break;
-				}					
-				case 2://send to pc TODO
-				{
-
-					break;
+					SPI_SLAVE_write(spiMsgR, type, len);	
 				}
-
+				else
+				{
+					SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
+				}				
+			}else if(spiType == 2){ //send to pc TODO
+					
 			}
 		}		
 	}

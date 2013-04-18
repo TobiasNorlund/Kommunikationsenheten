@@ -39,6 +39,7 @@ C_SRCS +=  \
 ../../../TSEA27-include/message.c \
 ../../../TSEA27-include/SPI/spi_slave.c \
 ../../../TSEA27-include/UART/uart.c \
+../../../TSEA27-include/utils.c \
 ../Kommunikationsenheten.c
 
 
@@ -53,6 +54,7 @@ circularbuffer.o \
 message.o \
 spi_slave.o \
 uart.o \
+utils.o \
 Kommunikationsenheten.o
 
 
@@ -61,6 +63,7 @@ circularbuffer.o \
 message.o \
 spi_slave.o \
 uart.o \
+utils.o \
 Kommunikationsenheten.o
 
 
@@ -69,6 +72,7 @@ circularbuffer.d \
 message.d \
 spi_slave.d \
 uart.d \
+utils.d \
 Kommunikationsenheten.d
 
 
@@ -77,6 +81,7 @@ circularbuffer.d \
 message.d \
 spi_slave.d \
 uart.d \
+utils.d \
 Kommunikationsenheten.d
 
 
@@ -89,6 +94,8 @@ ADDITIONAL_DEPENDENCIES:=
 OUTPUT_FILE_DEP:= ./makedep.mk
 
 # AVR32/GNU C Compiler
+
+
 
 
 

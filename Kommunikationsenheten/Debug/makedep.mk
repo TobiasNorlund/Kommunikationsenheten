@@ -10,5 +10,7 @@
 
 ..\..\TSEA27-include\UART\uart.c
 
+..\..\TSEA27-include\utils.c
+
 Kommunikationsenheten.c
 
