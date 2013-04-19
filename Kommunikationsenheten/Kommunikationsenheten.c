@@ -50,14 +50,14 @@ int main(void)
 		}
 		
 		if(SPI_SLAVE_read(spiMsg, &spiType, &spiLen))
-		{						
+		{			
 			if(spiType == TYPE_REQUEST_PC_MESSAGE)
 			{
 				uint8_t head = cbPeek(&messageQueue);
 				uint8_t len = head&0b00011111;
 				uint8_t type = 0b11100000&head;
 				type = type>>5;
-				if(len <= cbBytesUsed(&messageQueue))
+				if(len < cbBytesUsed(&messageQueue) && cbBytesUsed(&messageQueue) != 0)
 				{
 					head = cbRead(&messageQueue); //read head again, to sync
 					for(uint8_t i = 0; i < len; i++)
