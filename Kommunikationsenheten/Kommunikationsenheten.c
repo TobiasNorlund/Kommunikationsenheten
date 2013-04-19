@@ -70,8 +70,16 @@ int main(void)
 				{
 					SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
 				}				
-			}else if(spiType == 2){ //send to pc TODO
-					
+			}else if(spiType == TYPE_MAP_DATA){ //send to pc TODO
+				UART_writeMessage(spiMsg, spiType, spiLen);
+			}
+			else if(spiType == TYPE_DEBUG_DATA)
+			{
+				UART_writeMessage(spiMsg, spiType, spiLen);
+			}
+			else
+			{
+
 			}
 		}		
 	}
