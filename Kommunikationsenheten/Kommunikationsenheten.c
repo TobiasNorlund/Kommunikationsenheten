@@ -21,6 +21,7 @@ int main(void)
 	sei();
 	CircularBuffer messageQueue; // Buffer för mottagna meddelanden via uart
 	cbInit(&messageQueue, 32);
+	
 	uint8_t spiMsg[32];
 	uint8_t spiType;
 	uint8_t spiLen;
@@ -32,10 +33,7 @@ int main(void)
 	uint8_t uartMsg[16];
 	uint8_t uartType;
 	uint8_t uartLen;
-	
-	SETBIT(DDRB, DDB3);
-	CLEARBIT(PORTB, PORTB3);
-		
+
 	while(1){
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
 			if(uartType == TYPE_EMERGENCY_STOP){
@@ -70,7 +68,7 @@ int main(void)
 				{
 					SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
 				}				
-			}else if(spiType == TYPE_MAP_DATA){ //send to pc TODO
+			}else if(spiType == TYPE_MAP_DATA){
 				UART_writeMessage(spiMsg, spiType, spiLen);
 			}
 			else if(spiType == TYPE_DEBUG_DATA)
