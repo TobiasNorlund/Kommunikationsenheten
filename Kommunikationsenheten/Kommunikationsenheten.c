@@ -18,6 +18,7 @@ int main(void)
 {
 	SPI_SLAVE_init();
 	UART_init();
+	UART_handshake();
 	sei();
 	CircularBuffer messageQueue; // Buffer för mottagna meddelanden via uart
 	cbInit(&messageQueue, 32);
@@ -80,6 +81,6 @@ int main(void)
 
 			}
 		}		
-	}
+ 	}
 	return 0;
 }
