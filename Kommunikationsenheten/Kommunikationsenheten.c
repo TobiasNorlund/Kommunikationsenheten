@@ -18,7 +18,6 @@ int main(void)
 {
 	SPI_SLAVE_init();
 	UART_init();
-	UART_handshake();
 	sei();
 	CircularBuffer messageQueue; // Buffer för mottagna meddelanden via uart
 	cbInit(&messageQueue, 32);
@@ -36,6 +35,7 @@ int main(void)
 	uint8_t uartLen;
 
 	while(1){
+
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
 			if(uartType == TYPE_EMERGENCY_STOP){
 				SETBIT(PORTB, PORTB3);
@@ -52,23 +52,30 @@ int main(void)
 		{			
 			if(spiType == TYPE_REQUEST_PC_MESSAGE)
 			{
-				uint8_t head = cbPeek(&messageQueue);
-				uint8_t len = head&0b00011111;
-				uint8_t type = 0b11100000&head;
-				type = type>>5;
-				if(len < cbBytesUsed(&messageQueue) && cbBytesUsed(&messageQueue) != 0)
-				{
-					head = cbRead(&messageQueue); //read head again, to sync
-					for(uint8_t i = 0; i < len; i++)
+				if(cbBytesUsed(&messageQueue)!=0)				
+				{				
+					uint8_t head = cbPeek(&messageQueue);
+					uint8_t len = head&0b00011111;
+					uint8_t type = 0b11100000&head;
+					type = type>>5;
+					if(len < cbBytesUsed(&messageQueue) && cbBytesUsed(&messageQueue) != 0)
 					{
-						spiMsgR[i]=cbRead(&messageQueue);
+						head = cbRead(&messageQueue); //read head again, to sync
+						for(uint8_t i = 0; i < len; i++)
+						{
+							spiMsgR[i]=cbRead(&messageQueue);
+						}
+						SPI_SLAVE_write(spiMsgR, type, len);	
 					}
-					SPI_SLAVE_write(spiMsgR, type, len);	
+					else
+					{
+						SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
+					}
 				}
 				else
 				{
 					SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
-				}				
+				}			
 			}else if(spiType == TYPE_MAP_DATA){
 				UART_writeMessage(spiMsg, spiType, spiLen);
 			}
@@ -80,7 +87,8 @@ int main(void)
 			{
 
 			}
-		}		
+		}
+}		
  	}
 	return 0;
 }
