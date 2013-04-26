@@ -35,6 +35,10 @@ int main(void)
 	uint8_t uartLen;
 
 	while(1){
+		if(!handshaken)
+		{
+			UART_handshake();
+		}
 
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
 			if(uartType == TYPE_EMERGENCY_STOP){
@@ -88,7 +92,7 @@ int main(void)
 
 			}
 		}
-}		
+
  	}
 	return 0;
 }
