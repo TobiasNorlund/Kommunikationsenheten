@@ -33,6 +33,8 @@ int main(void)
 	uint8_t uartMsg[16];
 	uint8_t uartType;
 	uint8_t uartLen;
+	
+	uint8_t stopped = 0;
 
 	while(1){
 		if(!handshaken)
@@ -43,12 +45,18 @@ int main(void)
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
 			if(uartType == TYPE_EMERGENCY_STOP){
 				SETBIT(PORTB, PORTB3);
+				stopped=1;
 			}else{
 				cbWrite(&messageQueue, (uartType<<5)|uartLen);
 				for(uint8_t i=0; i < uartLen; i++)
 				{
 					cbWrite(&messageQueue, uartMsg[i]);
 				}
+			}
+			if(uartType == TYPE_CHANGE_PARM && stopped==1)
+			{
+				CLEARBIT(PORTB, PORTB3);
+				stopped=0;
 			}
 		}
 		
