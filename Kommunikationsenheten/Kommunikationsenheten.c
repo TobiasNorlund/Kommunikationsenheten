@@ -1,9 +1,18 @@
-﻿/*
- * Kommunikationsenheten.c
+﻿/**
+ * TSEA27 Elektronikprojekt
  *
- * Created: 4/9/2013 11:13:54 AM
- *  Author: tobno568
- */ 
+ * IDENTIFIERING
+ *
+ * Modul: Kommunikationsenheten
+ * Filnamn: kommunikationsenheten.c
+ * Skriven av: T. Norlund, J. Källström
+ * Datum: 2013-05-15
+ * Version: 1.0
+ *
+ * BESKRIVNING
+ *
+ * Main-fil för kommunikationsenheten
+ */
 
 #include <stdint.h>
 #include <avr/io.h>
@@ -16,10 +25,17 @@
 
 int main(void)
 {
+	// Initiera SPI som slav
 	SPI_SLAVE_init();
+	
+	// Initiera UART
 	UART_init();
+	
+	// Sätt på interrupts
 	sei();
-	CircularBuffer messageQueue; // Buffer för mottagna meddelanden via uart
+	
+	// Skapa meddelandebuffert för meddelanden som ska skickas till styrenheten
+	CircularBuffer messageQueue;
 	cbInit(&messageQueue, 32);
 	
 	uint8_t spiMsg[32];
@@ -35,11 +51,14 @@ int main(void)
 	uint8_t uartLen;
 
 	while(1){
-
+		
+		// Kolla om det har kommit ett helt meddelande från PCn
 		if(UART_readMessage(uartMsg,&uartType,&uartLen)){
+			// Kolla om det är ett nödstoppsanrop
 			if(uartType == TYPE_EMERGENCY_STOP){
 				SETBIT(PORTB, PORTB3);
 			}else{
+				// Annars, lägg hela meddelandet i meddelandebuffern
 				cbWrite(&messageQueue, (uartType<<5)|uartLen);
 				for(uint8_t i=0; i < uartLen; i++)
 				{
@@ -48,10 +67,12 @@ int main(void)
 			}
 		}
 		
+		// Kolla om vi har tagit emot ett helt meddelande från styrenheten
 		if(SPI_SLAVE_read(spiMsg, &spiType, &spiLen))
-		{			
+		{	
 			if(spiType == TYPE_REQUEST_PC_MESSAGE)
 			{
+				// Om det är en efterfrågan av PC-meddelanden, skicka det första meddelandet i buffern, om det finns något
 				if(cbBytesUsed(&messageQueue)!=0)				
 				{				
 					uint8_t head = cbPeek(&messageQueue);
@@ -60,7 +81,7 @@ int main(void)
 					type = type>>5;
 					if(len < cbBytesUsed(&messageQueue) && cbBytesUsed(&messageQueue) != 0)
 					{
-						head = cbRead(&messageQueue); //read head again, to sync
+						head = cbRead(&messageQueue); // Läs headern igen
 						for(uint8_t i = 0; i < len; i++)
 						{
 							spiMsgR[i]=cbRead(&messageQueue);
@@ -76,11 +97,14 @@ int main(void)
 				{
 					SPI_SLAVE_write(spiMsgR, TYPE_NO_PC_MESSAGES, 0);
 				}			
-			}else if(spiType == TYPE_MAP_DATA){
+			}else if(spiType == TYPE_MAP_DATA)
+			{
+				// Skicka kartdata till PC
 				UART_writeMessage(spiMsg, spiType, spiLen);
 			}
 			else if(spiType == TYPE_DEBUG_DATA)
 			{
+				// Skicka debugdata till PC
 				UART_writeMessage(spiMsg, spiType, spiLen);
 			}
 			else
@@ -88,7 +112,7 @@ int main(void)
 
 			}
 		}
-}		
+
  	}
 	return 0;
 }
