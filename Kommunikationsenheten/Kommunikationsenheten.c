@@ -49,6 +49,8 @@ int main(void)
 	uint8_t uartMsg[16];
 	uint8_t uartType;
 	uint8_t uartLen;
+	
+	uint8_t stopped = 0;
 
 	while(1){
 		
@@ -57,6 +59,7 @@ int main(void)
 			// Kolla om det är ett nödstoppsanrop
 			if(uartType == TYPE_EMERGENCY_STOP){
 				SETBIT(PORTB, PORTB3);
+				stopped=1;
 			}else{
 				// Annars, lägg hela meddelandet i meddelandebuffern
 				cbWrite(&messageQueue, (uartType<<5)|uartLen);
@@ -64,6 +67,11 @@ int main(void)
 				{
 					cbWrite(&messageQueue, uartMsg[i]);
 				}
+			}
+			if(uartType == TYPE_CHANGE_PARM && stopped==1)
+			{
+				CLEARBIT(PORTB, PORTB3);
+				stopped=0;
 			}
 		}
 		
